@@ -1,19 +1,29 @@
-CXX = g++
-CXXFLAGS = -Wall -Wextra
-LDLIBS = -lglfw -lGL -lm
+CXX ?= g++
+CPPFLAGS += -Iinclude
+CXXFLAGS ?= -Wall -Wextra
+LDLIBS += -lglfw -lGL -lm
 
-TARGET = esfera
-OBJECTS = main.o esfera.o
+TARGET := bin/esfera
+SOURCES := src/main.cpp src/esfera.cpp src/tardis.cpp
+OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
+DEPS := $(OBJECTS:.o=.d)
 
-.PHONY: all clean
+.PHONY: all run clean
 
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
+	@mkdir -p $(@D)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-main.o: main.cpp esfera.h
-esfera.o: esfera.cpp esfera.h
+obj/%.o: src/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+run: $(TARGET)
+	./$(TARGET)
 
 clean:
-	rm -f $(TARGET) $(OBJECTS)
+	rm -f $(OBJECTS) $(DEPS) $(TARGET)
+
+-include $(DEPS)

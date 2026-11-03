@@ -1,6 +1,7 @@
 
 #include "esfera.h"
 #include <GL/gl.h>
+#include <GL/glext.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
@@ -41,13 +42,52 @@ void desenharEsfera(const float r, const int slices, const int stacks) {
     }
 }
 
+
 void girarEsfera(GLfloat velocidade_rot) {
   float angulo = (float)glfwGetTime() * velocidade_rot; // Velocidade de rotação
-
-  glTranslatef(0.0f, 0.0f, -3.0f); // Move a esfera para frente
-  glRotatef(angulo, 1.0f, 0.0f, 0.0f); // Rotaciona a esfera em torno do eixo X
+  glTranslatef(0.0f, 0.0f, -3.0f); 
+  glRotatef(angulo, 1.0f, 0.0f, 0.0f); 
   glRotatef(angulo, 0.0f, 1.0f, 0.0f);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Modo de desenho em linha
+  glPolygonMode(GL_FRONT_AND_BACK,GL_LINE); 
   desenharEsfera(2, 30, 30); // Desenha a esfera
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Restaura o modo de preenchimento
+}
+
+
+
+void desenharSol(GLfloat raio) {
+  glPushMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(7.0f, 9.0f, -5.0f);
+  glColor3f(1.0f, 1.0f, 0.0f);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  desenharEsfera(raio, 20, 20);
+  glColor3f(1.0f, 1.0f, 1.0f);
+  glPopMatrix();      
+}
+
+void desenharTerra(GLfloat raio) {
+  glPushMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glColor3f(0.2f, 0.5f, 1.0f);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  desenharEsfera(raio, 20, 20);
+  glColor3f(1.0f, 1.0f, 1.0f);
+  glPopMatrix();
+}
+
+
+void girarTerra(GLfloat velocidade_rot) {
+  float angulo = (float)glfwGetTime() * velocidade_rot; // Velocidade de rotação
+  glTranslatef(0.0f, 0.0f, -3.0f); 
+  glRotatef(angulo, 0.0f, 1.0f, 0.0f);
+}
+
+void girarSol(GLfloat velocidade_rot) {
+  float angulo = (float)glfwGetTime() * velocidade_rot; // Velocidade de rotação
+  glTranslatef(0.0f, 0.0f, -3.0f); 
+  glRotatef(angulo, 1.0f, 0.0f, 0.0f); 
+  glRotatef(angulo, 0.0f, 1.0f, 0.0f);
 }
