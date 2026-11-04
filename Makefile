@@ -4,7 +4,7 @@ CXXFLAGS ?= -Wall -Wextra
 LDLIBS += -lglfw -lGL -lm
 
 TARGET := bin/esfera
-SOURCES := src/main.cpp src/esfera.cpp src/tardis.cpp src/iluminacao.cpp
+SOURCES := src/main.cpp src/esfera.cpp src/tardis.cpp src/iluminacao.cpp 
 OBJECTS := $(patsubst src/%.cpp,obj/%.o,$(SOURCES))
 DEPS := $(OBJECTS:.o=.d)
 
