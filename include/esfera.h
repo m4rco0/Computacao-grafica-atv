@@ -1,15 +1,35 @@
-#include <GL/gl.h>
-#include <GLFW/glfw3.h>
-#include <math.h>
 #ifndef ESFERA_H
 #define ESFERA_H
 
-void desenharEsfera(const float r, const int slices, const int stacks);
-void girarEsfera(GLfloat velocidade_rot);
+#include <GL/gl.h>
+#include <glm/glm.hpp>
 
-void desenharSol(GLfloat raio, GLfloat posX, GLfloat posY, GLfloat posZ);
-void desenharTerra(GLfloat raio);
-void desenhar(GLfloat raio_planeta, GLfloat posX_sol, GLfloat posY_sol,
-              GLfloat posZ_sol);
+class Esfera {
+public:
+    Esfera(float raio, const glm::vec3& posicao, float velocidadeRot,
+           const glm::vec3& cor = glm::vec3(1.0f));
+    virtual ~Esfera() = default;
+
+    virtual void atualizar(float dt);   // gira a esfera
+    virtual void desenhar() const;      // desenha na posição atual
+
+    void setPosicao(const glm::vec3& p) { posicao = p; }
+    const glm::vec3& getPosicao() const { return posicao; }
+
+    void mudarRenderizacao(bool wireframe) {
+        if (wireframe)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+protected:
+    void desenharMalha(int slices = 32, int stacks = 32) const;
+
+    float raio;
+    glm::vec3 posicao;
+    glm::vec3 cor;
+    float velocidadeRot;   // graus por segundo
+    float anguloRot = 0.0f;
+};
 
 #endif // ESFERA_H

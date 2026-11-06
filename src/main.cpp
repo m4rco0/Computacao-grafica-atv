@@ -35,6 +35,17 @@ void redimensionar(GLFWwindow *, int w, int h) {
   glMatrixMode(GL_MODELVIEW);
 }
 
+void desenhar(Esfera &esfera, GLfloat posX_sol, GLfloat posY_sol, GLfloat posZ_sol) {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glLoadIdentity();
+  teste_iluminacao(posX_sol, posY_sol, posZ_sol);
+  
+  // esfera desenhos
+  esfera.desenhar();
+  esfera.mudarRenderizacao(renderiza_malha);
+
+}
+
 void GerenciarTeclado(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -97,15 +108,13 @@ int main(int argc, char **argv) {
   glfwGetFramebufferSize(window, &largura_atual, &altura_atual);
   redimensionar(window, largura_atual, altura_atual);
 
+  Esfera esfera(raio_planeta, glm::vec3(0.0f, 0.0f, 0.0f), 30.0f,
+                glm::vec3(0.2f, 0.5f, 1.0f));
+
   // loop principal
   while (!glfwWindowShouldClose(window)) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    teste_iluminacao(posX_sol, posY_sol, posZ_sol);
-    desenhar(raio_planeta, posX_sol, posY_sol, posZ_sol);
-
+    desenhar(esfera, posX_sol, posY_sol, posZ_sol);
     GerenciarTeclado(window);
     glfwSwapBuffers(window);
     glfwPollEvents();
