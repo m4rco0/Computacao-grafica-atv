@@ -2,3 +2,6 @@
 *.elf
 .vscode/*
 *.obj
+*.d
+*.bk 
+*.bin
