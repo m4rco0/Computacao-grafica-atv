@@ -4,4 +4,4 @@
 *.obj
 *.d
 *.bk 
-*.bin
+bin/*

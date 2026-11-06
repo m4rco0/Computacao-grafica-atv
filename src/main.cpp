@@ -2,6 +2,8 @@
 #include "../include/iluminacao.h"
 #include "../include/primitivas.h"
 #include "../include/tardis.h"
+#include "../include/terra.h"
+#include "../include/sol.h"
 #include <GL/freeglut_std.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -35,14 +37,18 @@ void redimensionar(GLFWwindow *, int w, int h) {
   glMatrixMode(GL_MODELVIEW);
 }
 
-void desenhar(Esfera &esfera, GLfloat posX_sol, GLfloat posY_sol, GLfloat posZ_sol) {
+void desenhar(Terra &terra, Sol &sol, GLfloat posX_sol, GLfloat posY_sol, GLfloat posZ_sol) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
   teste_iluminacao(posX_sol, posY_sol, posZ_sol);
   
   // esfera desenhos
-  esfera.desenhar();
-  esfera.mudarRenderizacao(renderiza_malha);
+  terra.desenhar();
+  terra.mudarRenderizacao(renderiza_malha);
+
+  // desenhar o sol
+  sol.desenhar();
+  sol.mudarRenderizacao(renderiza_malha);
 
 }
 
@@ -108,13 +114,14 @@ int main(int argc, char **argv) {
   glfwGetFramebufferSize(window, &largura_atual, &altura_atual);
   redimensionar(window, largura_atual, altura_atual);
 
-  Esfera esfera(raio_planeta, glm::vec3(0.0f, 0.0f, 0.0f), 30.0f,
-                glm::vec3(0.2f, 0.5f, 1.0f));
+  Terra terra(raio_planeta, glm::vec3(1.0f, 0.0f, 0.0f), 30.0f,
+              glm::vec3(0.0f, 0.0f, 1.0f));
 
+  Sol sol(1.0f, glm::vec3(posX_sol, posY_sol, posZ_sol), glm::vec3(1.0f, 1.0f, 0.0f));
   // loop principal
   while (!glfwWindowShouldClose(window)) {
 
-    desenhar(esfera, posX_sol, posY_sol, posZ_sol);
+    desenhar(terra, sol,  posX_sol, posY_sol, posZ_sol);
     GerenciarTeclado(window);
     glfwSwapBuffers(window);
     glfwPollEvents();
