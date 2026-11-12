@@ -1,5 +1,6 @@
 #include "../include/iluminacao.h"
 #include <GL/gl.h>
+#include <glm/glm.hpp>
 
 void teste_iluminacao(GLfloat posX, GLfloat posY, GLfloat posZ) {
   glEnable(GL_LIGHTING);

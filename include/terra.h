@@ -1,6 +1,8 @@
 #ifndef TERRA
 #define TERRA
 
+#include <glm/glm.hpp>
+#include "../include/esfera.h"
 class Terra : public Esfera {
     glm::vec3 posicao_sol;
     public:
@@ -9,5 +11,6 @@ class Terra : public Esfera {
             this->raio = raio;
             this->cor = cor;
         }
+        float getRaio() { return raio;};
 };
 #endif // TERRA
