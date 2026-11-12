@@ -1,5 +1,6 @@
 #include "../include/tardis.h"
 #include <GL/gl.h>
+#include <glm/common.hpp>
 #include <cmath>
 #include <glm/glm.hpp>
 namespace {
@@ -125,75 +126,53 @@ Tardis::Tardis() : Tardis(3.0f, glm::vec3( 0.0f, 0.0f, 0.0f),
 Tardis::Tardis(GLfloat tamanho, const glm::vec3 &pos, const glm::vec3 &cor)
     : tamanho(tamanho), posicao(pos), cor(cor), anguloY(0.0f) {}
 
+bool Tardis::carregarModelo(const std::string& caminho, std::string& erro) {
+  return modelo.carregar(caminho, erro);
+}
 
 void Tardis::desenhar(glm::vec3 centro_terra) {
-  const float largura = tamanho * (2.0f / 3.0f);
-  const float profundidade = tamanho * (2.0f / 3.0f);
-
-  GLint modo_anterior[2];
-  glGetIntegerv(GL_POLYGON_MODE, modo_anterior);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-  // normal da esfera no ponto onde a TARDIS está = "para cima" local
-  glm::vec3 n = glm::normalize(posicao - centro_terra);
-  glm::vec3 y(0.0f, 1.0f, 0.0f);
+  const glm::vec3 normal = glm::normalize(posicao - centro_terra);
+  const glm::vec3 eixo = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), normal);
+  const float comprimento_eixo = glm::length(eixo);
+  const float escala = tamanho / 2.3f;
 
   glPushMatrix();
   glTranslatef(posicao.x, posicao.y, posicao.z);
-
-  // gira o +Y do bloco até alinhar com a normal
-  glm::vec3 eixo = glm::cross(y, n);
-  float comp = glm::length(eixo);
-  if (comp > 1e-6f) {
-    float ang = glm::degrees(std::atan2(comp, glm::dot(y, n)));
-    glRotatef(ang, eixo.x, eixo.y, eixo.z);
-  } else if (n.y < 0.0f) {
-    glRotatef(180.0f, 1.0f, 0.0f, 0.0f);   // caso n = -Y
+  if (comprimento_eixo > 1e-6f) {
+    const float angulo = glm::degrees(std::atan2(
+        comprimento_eixo, glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), normal)));
+    glRotatef(angulo, eixo.x, eixo.y, eixo.z);
+  } else if (normal.y < 0.0f) {
+    glRotatef(180.0f, 1.0f, 0.0f, 0.0f);
   }
-
+  glScalef(escala, escala, escala);
   glColor3f(cor.r, cor.g, cor.b);
-  desenharBloco(largura, tamanho, profundidade, 0.0f, tamanho / 2.0f, 0.0f);
+  modelo.desenhar();
+  glPopMatrix();
+}
 
-  // Rodape, moldura superior e telhado em degraus.
-  glColor3f(cor.r * 0.55f, cor.g * 0.55f, cor.b * 0.65f);
-  desenharBloco(largura * 1.08f, tamanho * 0.08f, profundidade * 1.08f,
-                0.0f, tamanho * 0.04f, 0.0f);
-  glColor3f(cor.r * 0.75f, cor.g * 0.75f, cor.b * 0.85f);
-  desenharBloco(largura * 1.08f, tamanho * 0.07f, profundidade * 1.08f,
-                0.0f, tamanho * 0.91f, 0.0f);
-  desenharBloco(largura * 1.16f, tamanho * 0.05f, profundidade * 1.16f,
-                0.0f, tamanho * 0.97f, 0.0f);
-  desenharBloco(largura * 0.76f, tamanho * 0.07f, profundidade * 0.76f,
-                0.0f, tamanho * 1.03f, 0.0f);
+void Tardis::decolar(float distancia_alvo, float velocidade) {
+  distancia_alvo_decolagem = distancia_alvo;
+  velocidade_decolagem = velocidade;
+}
 
-  for (int face = 0; face < 4; ++face) {
-    glPushMatrix();
-    glRotatef(face * 90.0f, 0.0f, 1.0f, 0.0f);
-    desenharFachada(largura, profundidade, tamanho);
-    glPopMatrix();
+void Tardis::atualizar(float dt, const glm::vec3& centro_terra) {
+  const glm::vec3 deslocamento = posicao - centro_terra;
+  const float distancia = glm::length(deslocamento);
+  const float distancia_restante = distancia_alvo_decolagem - distancia;
+
+  if (distancia > 1e-6f && velocidade_decolagem > 0.0f &&
+      distancia_restante > 0.0f) {
+    const float movimento = velocidade_decolagem * dt;
+    const float movimento_aplicado =
+        movimento < distancia_restante ? movimento : distancia_restante;
+    posicao += (deslocamento / distancia) * movimento_aplicado;
+
+    if (movimento_aplicado >= distancia_restante)
+      velocidade_decolagem = 0.0f;
   }
 
-  // Luminaria no topo, caracteristica da cabine policial.
-  glColor3f(cor.r * 0.55f, cor.g * 0.55f, cor.b * 0.65f);
-  desenharBloco(tamanho * 0.07f, tamanho * 0.06f, tamanho * 0.07f,
-                0.0f, tamanho * 1.10f, 0.0f);
-  glColor3f(0.72f, 0.86f, 1.0f);
-  desenharBloco(tamanho * 0.11f, tamanho * 0.14f, tamanho * 0.11f,
-                0.0f, tamanho * 1.20f, 0.0f);
-  glColor3f(cor.r * 0.55f, cor.g * 0.55f, cor.b * 0.65f);
-  desenharBloco(tamanho * 0.15f, tamanho * 0.035f, tamanho * 0.15f,
-                0.0f, tamanho * 1.29f, 0.0f);
-
-  glPopMatrix();
-  glPolygonMode(GL_FRONT_AND_BACK, modo_anterior[0]);
-}
-
-void Tardis::decolar(float velocidade) {
-}
-void Tardis::atualizar(float dt) {
   anguloY += dt;
-
   if (anguloY > 360.0f)
     anguloY -= 360.0f;
-
 }

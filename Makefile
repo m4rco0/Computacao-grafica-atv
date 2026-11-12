@@ -1,7 +1,7 @@
 CXX ?= g++
 CPPFLAGS += -Iinclude
 CXXFLAGS ?= -Wall -Wextra
-LDLIBS += -lglfw -lGL -lm
+LDLIBS += -lglfw -lGL -lm -lassimp
 
 TARGET := bin/esfera
 SOURCES := src/main.cpp src/esfera.cpp src/tardis.cpp src/iluminacao.cpp src/sol.cpp
@@ -21,7 +21,7 @@ obj/%.o: src/%.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET) 1 2 2 2
 
 clean:
 	rm -f $(OBJECTS) $(DEPS) $(TARGET)

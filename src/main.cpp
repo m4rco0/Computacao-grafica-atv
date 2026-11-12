@@ -4,15 +4,18 @@
 #include "../include/terra.h"
 #include "../include/sol.h"
 #include "../include/camera.h"
-#include <GL/freeglut_std.h>
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 #include <glm/geometric.hpp>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+constexpr float ALTURA_DECOLAGEM = 1.0f;
+
 // Registra o input do programa para renderizar o raio do planeta e a posição do
 // sol
 bool lerParametro(const char *texto, GLfloat &valor) {
@@ -38,7 +41,8 @@ void redimensionar(GLFWwindow *, int w, int h) {
 }
 
 
-void desenhar(Terra &terra, Sol &sol, Camera &camera,Tardis &tardis, GLfloat posX_sol, GLfloat posY_sol, GLfloat posZ_sol) {
+void desenhar(Terra &terra, Sol &sol, Camera &camera, Tardis &tardis,
+              GLfloat posX_sol, GLfloat posY_sol, GLfloat posZ_sol) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   camera.update(terra.getRaio(), terra.getPosicao(), tardis.getPosicao());
@@ -52,10 +56,9 @@ void desenhar(Terra &terra, Sol &sol, Camera &camera,Tardis &tardis, GLfloat pos
   sol.desenhar();
   sol.mudarRenderizacao(renderiza_malha);
   tardis.desenhar(terra.getPosicao());
-  tardis.decolar(0.4f);
 }
 
-void GerenciarTeclado(GLFWwindow *window, Camera &camera) {
+void GerenciarTeclado(GLFWwindow *window, Tardis &tardis, float raio_terra) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
@@ -69,15 +72,13 @@ void GerenciarTeclado(GLFWwindow *window, Camera &camera) {
     renderiza_malha = !renderiza_malha;
   }
 
-  if (glfwGetKey(window , GLFW_KEY_SPACE) == GLFW_PRESS) {
-      if(camera.esta_girando) {
-        camera.decolar(0.0f);
-        camera.esta_girando = false;
-      } else {
-        camera.decolar(0.3f);
-        camera.esta_girando = true;
-      }
-    }
+  static bool espaco_pressionado_anteriormente = false;
+  const bool espaco_pressionado =
+      glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+  if (espaco_pressionado && !espaco_pressionado_anteriormente)
+    tardis.decolar(raio_terra + ALTURA_DECOLAGEM, 0.4f);
+  espaco_pressionado_anteriormente = espaco_pressionado;
+
   teclaR_pressionada_anteriormente = teclaR_atual;
 }
 
@@ -116,6 +117,8 @@ int main(int argc, char **argv) {
   }
   // limpando o buffer
   glfwMakeContextCurrent(window);
+
+  std::string error;
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glShadeModel(GL_SMOOTH);
@@ -135,11 +138,24 @@ int main(int argc, char **argv) {
   const glm::vec3 pos_tardis =
       terra.getPosicao() + glm::vec3(1.0f * raio_planeta,0.0f, 0.0f);
   Tardis tardis(raio_planeta * 0.28f, pos_tardis, glm::vec3(0, 0, 1));
+  if (!tardis.carregarModelo("models/tardis.obj", error)) {
+    fprintf(stderr, "Erro ao carregar modelo: %s\n", error.c_str());
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return EXIT_FAILURE;
+  }
+
   Camera camera;
+  double tempo_anterior = glfwGetTime();
   // loop principal
   while (!glfwWindowShouldClose(window)) {
+    const double agora = glfwGetTime();
+    const float dt = static_cast<float>(agora - tempo_anterior);
+    tempo_anterior = agora;
+
+    tardis.atualizar(dt, terra.getPosicao());
     desenhar(terra, sol, camera, tardis, posX_sol, posY_sol, posZ_sol);
-    GerenciarTeclado(window, camera);
+    GerenciarTeclado(window, tardis, terra.getRaio());
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
