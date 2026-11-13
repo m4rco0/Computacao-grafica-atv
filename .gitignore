@@ -1,7 +1,7 @@
 *.o 
 *.elf
 .vscode/*
-*.obj
+obj/*
 *.d
 *.bk 
 bin/*

@@ -1,70 +1,55 @@
-#ifndef CAMERA_H 
+#ifndef CAMERA_H
 #define CAMERA_H
+
 #include <GL/gl.h>
-#include <GLFW/glfw3.h>
 #include <cmath>
-#include <glm/ext/matrix_float4x4.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/ext/vector_float3.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-class Camera{
-  public:
-    glm::vec3 pos;
-    glm::vec3 forward;
-    int h_atual;
-    float velocidade;
-    float theta;
-    double ultimo_tempo;
-    bool esta_girando;
 
-    Camera() : 
-      pos(0.0f, 0.0f, 1.0f), forward(0.0f, 0.0f, -1.0f), 
-      h_atual(0.0f), velocidade(0.0f), esta_girando(false), theta(0.0f), ultimo_tempo(0.0) {}
- 
-    float distanciaAoCentro(float raio_terra) const {
-      return raio_terra + h_atual;
-    }
-    
-    void update(float raio_terra, glm::vec3 terra_pos, glm::vec3 alvo) {
-      double tempo_agr = glfwGetTime();
-      float dt = (float)(tempo_agr - ultimo_tempo);
-      ultimo_tempo = tempo_agr;
+class Camera {
+public:
+  Camera() : distancia(3.0f), theta(0.0f), phi(0.4f), esta_girando(false) {}
 
-      if (dt > 0.1f) dt = 0.1f;
+  void update(float raio_terra, const glm::vec3 &centro_terra,
+              const glm::vec3 &pos_tardis, const glm::vec3 &frente_tardis,
+              bool no_ar) {
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-      const float dist = distanciaAoCentro(raio_terra) * 2.5f;
+    if (no_ar) {
+      // Perspectiva da TARDIS vendo o solo da Terra se afastar abaixo
+      glm::vec3 normal = glm::normalize(pos_tardis - centro_terra);
+      glm::vec3 olho = pos_tardis + normal * 0.9f - frente_tardis * 1.4f;
+      glm::vec3 alvo = pos_tardis - normal * 1.2f + frente_tardis * 0.8f;
 
-      theta += velocidade * dt;
-      if (theta > 2.0f * (float)M_PI)
-        theta -= 2.0f * (float)M_PI;
-      if(theta < 0.0f)
-        theta += 2.0f * (float)M_PI;
+      glm::mat4 view = glm::lookAt(olho, alvo, normal);
+      glLoadMatrixf(glm::value_ptr(view));
+    } else {
+      // Câmera externa orbitando o planeta quando pousada
+      float r = raio_terra * 3.0f;
+      float x = centro_terra.x + r * std::cos(phi) * std::sin(theta);
+      float y = centro_terra.y + r * std::sin(phi);
+      float z = centro_terra.z + r * std::cos(phi) * std::cos(theta);
 
-      const glm::vec3 up = glm::normalize(alvo - terra_pos);
-      glm::vec3 tangent = glm::cross(up, glm::vec3(0.0f, 1.0f, 0.0f));
-      if (glm::length(tangent) < 1e-6f)
-        tangent = glm::cross(up, glm::vec3(0.0f, 0.0f, 1.0f));
-      tangent = glm::normalize(tangent);
-      const glm::vec3 bitangent = glm::normalize(glm::cross(up, tangent));
-      const glm::vec3 orbit =
-          std::cos(theta) * tangent + std::sin(theta) * bitangent;
-      const glm::vec3 eye = alvo + dist * (orbit + 0.35f * up);
-      const glm::mat4 view = glm::lookAt(eye, alvo, up);
-
-      this->pos = eye;
-      glMatrixMode(GL_MODELVIEW);
+      glm::mat4 view = glm::lookAt(glm::vec3(x, y, z), centro_terra,
+                                   glm::vec3(0.0f, 1.0f, 0.0f));
       glLoadMatrixf(glm::value_ptr(view));
     }
+  }
 
-    void decolar(float velocidade) {
-      this->velocidade = velocidade;
-      this->esta_girando = true;
-    }
-    bool Girando() {
-      return this->esta_girando;
-    }
+  void setAngles(float t, float p) {
+    theta = t;
+    phi = p;
+  }
+  float getTheta() const { return theta; }
+  float getPhi() const { return phi; }
 
+private:
+  float distancia;
+  float theta;
+  float phi;
+  bool esta_girando;
 };
 
-#endif //CAMERA_H
+#endif // CAMERA_H

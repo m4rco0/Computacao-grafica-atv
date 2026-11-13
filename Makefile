@@ -1,7 +1,7 @@
 CXX ?= g++
 CPPFLAGS += -Iinclude
 CXXFLAGS ?= -Wall -Wextra
-LDLIBS += -lglfw -lGL -lm -lassimp
+LDLIBS += -lglfw -lGL -lGLU -lm -lassimp
 
 TARGET := bin/esfera
 SOURCES := src/main.cpp src/esfera.cpp src/tardis.cpp src/iluminacao.cpp src/sol.cpp
